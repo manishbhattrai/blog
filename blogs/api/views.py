@@ -1,14 +1,81 @@
-from rest_framework import status,generics
-from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated,AllowAny
-from rest_framework.response import Response
 from .serializers import *
 from blogs.models import Post
 
 
 
 
-class BlogPostView(APIView):
+class ListCreatePostView(generics.ListCreateAPIView):
+     
+     queryset = Post.objects.all()
+     serializer_class = AddPostSerializer
+     permission_classes = [IsAuthenticated]
+
+
+     def get_queryset(self):
+         
+         return Post.objects.filter(author = self.request.user)
+     
+
+
+     def perform_create(self, serializer):
+          
+          return serializer.save(author = self.request.user)
+
+
+class ListPostView(generics.ListAPIView):
+     
+     queryset = Post.objects.all()
+     serializer_class = PostListSerializer
+     permission_classes = [AllowAny]
+
+     def get_queryset(self):
+         
+         return Post.objects.filter(status = 'published')
+
+
+class DetailPostView(generics.RetrieveDestroyAPIView):
+     
+     queryset = Post.objects.all()
+     serializer_class = PostDetailSerializer
+     permission_classes = [IsAuthenticated]
+
+
+     def get_queryset(self):
+        return Post.objects.filter(id =self.kwargs['pk'])
+     
+
+     def perform_update(self, serializer):
+        
+        serializer.save(user = self.request.user)
+
+
+
+     def perform_destroy(self, instance):
+        
+        instance.delete() 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''class BlogPostView(APIView):
 
     permission_classes = [IsAuthenticated]
 
@@ -75,5 +142,5 @@ class BlogPostDetailView(APIView):
         
         post.delete()
 
-        return Response({'Post deleted.'},status=status.HTTP_200_OK)
+        return Response({'Post deleted.'},status=status.HTTP_200_OK)'''
     
