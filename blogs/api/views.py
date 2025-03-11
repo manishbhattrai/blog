@@ -1,7 +1,8 @@
-from rest_framework import generics
+from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated,AllowAny
+from rest_framework.exceptions import ValidationError,NotFound
 from .serializers import *
-from blogs.models import Post
+from blogs.models import Post, Comments
 
 
 
@@ -55,6 +56,49 @@ class DetailPostView(generics.RetrieveDestroyAPIView):
      def perform_destroy(self, instance):
         
         instance.delete() 
+    
+
+class CommentListCreateView(generics.ListCreateAPIView):
+
+    queryset = Comments.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+
+    def perform_create(self, serializer):
+
+        post_id = self.kwargs['pk']
+
+        try:
+           post =  Post.objects.get(id = post_id)
+        
+        except Post.DoesNotExist:
+            return ValidationError({"detail":"No post available"}, status=status.HTTP_404_NOT_FOUND)
+        
+        
+        return serializer.save(post = post)
+    
+    def get_queryset(self):
+        
+        post_id = self.kwargs['pk']
+
+        if post_id:
+            comments =  Comments.objects.filter(post_id=post_id)
+        
+        if not comments.exists():
+            raise NotFound(detail="No comments available for this post.", code=status.HTTP_404_NOT_FOUND)
+        
+        return comments
+        
+
+
+        
+        
+
+        
+
+
+
 
 
 
