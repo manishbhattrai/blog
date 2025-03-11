@@ -7,7 +7,7 @@ from blogs.models import Post,PostImage,Comments
 class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
-        fields = ['image']
+        fields = ['id','image']
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -27,23 +27,38 @@ class PostDetailSerializer(serializers.ModelSerializer):
     
 class AddPostSerializer(serializers.ModelSerializer):
 
-    images = serializers.ListField(
+    images = PostImageSerializer(many=True, read_only=True)
+
+    uploaded_images = serializers.ListField(
         child=serializers.ImageField(), 
-        required=False  
+        required=False,
+        write_only = True
     )
 
 
     class Meta:
-        fields = ['title','description','images','status']
+        model = Post
+        fields = ['title','description','images','uploaded_images','status']
 
 
     
     def create(self, validated_data):
-        images = validated_data.pop('images', [])
+
+        uploaded_images = validated_data.pop('images',None)
+
+        user = self.context['request'].user 
+        validated_data['author'] = user 
+
         post = Post.objects.create(**validated_data)
 
-        for image in images:
-            PostImage.objects.create(post=post, image=image)
+        
+
+        print(f"Images: {uploaded_images}") 
+
+        if uploaded_images:
+            for image in uploaded_images:
+                PostImage.objects.create(post=post, image=image)
+
         
         return post
     
@@ -52,12 +67,7 @@ class AddPostSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         
         images = validated_data.pop('images', None)  
-
-        
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.status = validated_data.get('status', instance.status)
-        instance.save()
+        instance = super().update(instance, validated_data)
 
         
         if images is not None:

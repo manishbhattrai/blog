@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'blogs',
 ]
 
@@ -117,6 +118,33 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME':timedelta(seconds=int(os.getenv('JWT-ACCESS-TOKEN-LIFETIME',3600))), 
+    'REFRESH_TOKEN_LIFETIME':timedelta(seconds=int(os.getenv('JWT_REFRESH_TOKEN_LIFETIME',86400))), 
+    'ROTATE_REFRESH_TOKENS': False,  
+    'BLACKLIST_AFTER_ROTATION': False,
+    'ALGORITHM': 'HS256', 
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'), 
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
 
 
 # Static files (CSS, JavaScript, Images)
