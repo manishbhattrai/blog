@@ -67,7 +67,7 @@ class CommentListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
 
-        post_id = self.kwargs['pk']
+        post_id = self.request.data.get('pk')
 
         try:
            post =  Post.objects.get(id = post_id)
